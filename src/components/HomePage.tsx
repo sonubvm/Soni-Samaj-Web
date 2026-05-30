@@ -53,16 +53,17 @@ const features = [
   {
     icon: Users,
     title: 'Community Registry',
-    desc: 'Help build a unified Soni Samaj family database across regions.',
+    desc: 'Help build a unified Soni Samaj Uttarbhartiya Trust Surat family database across regions.',
   },
 ];
 
 const checklist = [
-  'Head of family name & mobile number',
+  'Head of family name, mobile number & photo',
+  'Marital status (spouse required if married)',
   'Full address (city, district, state, pincode)',
   'Father & mother names (occupation optional)',
+  'Spouse photo (optional even when married)',
   'Children school details (optional)',
-  'Co-resident info (optional)',
 ];
 
 const trustBadges = [
@@ -94,12 +95,15 @@ export default function HomePage() {
     <div className="min-h-screen overflow-x-hidden">
       {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-saffron-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-saffron-500 to-gold-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
               SS
             </div>
-            <span className="font-semibold text-gray-800">Soni Samaj</span>
+            <span className="font-semibold text-gray-800 hidden sm:inline">Soni Samaj Uttarbhartiya Trust Surat</span>
+            <span className="font-semibold text-gray-800 sm:hidden text-sm leading-tight max-w-[10rem]">
+              Soni Samaj Uttarbhartiya Trust Surat
+            </span>
           </div>
           <Link href="/register" className="btn-primary text-sm py-2 px-5 hidden sm:inline-flex">
             Register Now
@@ -113,27 +117,27 @@ export default function HomePage() {
         <div className="absolute bottom-20 right-[15%] w-48 h-48 rounded-full bg-gold-400/20 blur-3xl animate-float-slow pointer-events-none" />
         <div className="absolute top-1/3 right-[8%] hidden lg:block w-20 h-20 rounded-2xl bg-white/10 border border-white/20 rotate-12 animate-float pointer-events-none" />
 
-        <div className="max-w-6xl mx-auto px-6 py-16 md:py-24 relative">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 md:py-24 relative">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="animate-fade-up">
-              <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur rounded-full px-4 py-1.5 text-sm font-medium mb-6">
+              <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
                 <Sparkles className="w-4 h-4" />
                 Family Registration Portal
               </span>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 sm:mb-6">
                 Register Your Family in{' '}
                 <span className="underline decoration-gold-400 decoration-4 underline-offset-4">
                   Minutes
                 </span>
               </h1>
               <p className="text-lg text-white/90 mb-8 leading-relaxed max-w-xl">
-                Join the Soni Samaj community registry. Submit contact details, address, parents,
+                Join the Soni Samaj Uttarbhartiya Trust Surat community registry. Submit contact details, address, parents,
                 children and income — quick, secure and completely free.
               </p>
-              <div className="flex flex-wrap gap-4 mb-8">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <Link
                   href="/register"
-                  className="cta-pulse inline-flex items-center gap-2 bg-white text-saffron-700 font-semibold px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl hover:scale-[1.03] transition relative z-10"
+                  className="cta-pulse inline-flex items-center justify-center gap-2 bg-white text-saffron-700 font-semibold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl shadow-xl hover:shadow-2xl hover:scale-[1.03] transition relative z-10 min-h-[44px] w-full sm:w-auto"
                 >
                   <Users className="w-5 h-5" />
                   Start Registration — It&apos;s Free
@@ -141,7 +145,7 @@ export default function HomePage() {
                 </Link>
                 <a
                   href="#how-it-works"
-                  className="inline-flex items-center gap-2 border-2 border-white/50 text-white font-medium px-8 py-4 rounded-xl hover:bg-white/15 transition"
+                  className="inline-flex items-center justify-center gap-2 border-2 border-white/50 text-white font-medium px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl hover:bg-white/15 transition min-h-[44px] w-full sm:w-auto"
                 >
                   See How It Works
                 </a>
@@ -211,16 +215,16 @@ export default function HomePage() {
         </div>
 
         {/* Stats bar */}
-        <div className="max-w-6xl mx-auto px-6 pb-12">
-          <div className="grid grid-cols-3 gap-4 md:gap-6">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8 sm:pb-12">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6">
             {stats.map(({ label, value, icon: Icon }) => (
               <div
                 key={label}
-                className="bg-white/15 backdrop-blur rounded-2xl p-4 md:p-6 text-center border border-white/25 hover:bg-white/20 transition"
+                className="bg-white/15 backdrop-blur rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 text-center border border-white/25 hover:bg-white/20 transition"
               >
-                <Icon className="w-5 h-5 mx-auto mb-2 opacity-80" />
-                <p className="text-2xl md:text-3xl font-bold">{value}</p>
-                <p className="text-xs md:text-sm text-white/80 mt-1">{label}</p>
+                <Icon className="w-4 h-4 sm:w-5 sm:h-5 mx-auto mb-1 sm:mb-2 opacity-80" />
+                <p className="text-lg sm:text-2xl md:text-3xl font-bold">{value}</p>
+                <p className="text-[10px] sm:text-xs md:text-sm text-white/80 mt-0.5 sm:mt-1">{label}</p>
               </div>
             ))}
           </div>
@@ -342,7 +346,7 @@ export default function HomePage() {
           <GraduationCap className="w-10 h-10 mx-auto mb-4 opacity-90" />
           <h2 className="text-2xl md:text-3xl font-bold mb-3">Join the Community Registry</h2>
           <p className="text-white/90 max-w-2xl mx-auto mb-2">
-            Every registered family strengthens our community database — helping Soni Samaj stay
+            Every registered family strengthens our community database — helping Soni Samaj Uttarbhartiya Trust Surat stay
             connected with accurate family records across cities and districts.
           </p>
           <p className="text-white/70 text-sm mb-8">Your contribution takes less than 5 minutes.</p>
@@ -377,19 +381,19 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-500">
-        © Soni Samaj Family Registration Portal
+        © Soni Samaj Uttarbhartiya Trust Surat Family Registration Portal
       </footer>
 
       {/* Floating CTA on scroll */}
       <div
         className={clsx(
-          'fixed bottom-6 right-6 z-50 transition-all duration-300',
+          'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 left-4 sm:left-auto z-50 transition-all duration-300',
           showFloatingCta ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8 pointer-events-none'
         )}
       >
         <Link
           href="/register"
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-saffron-500 to-gold-500 text-white font-semibold px-6 py-3.5 rounded-full shadow-2xl hover:scale-105 transition animate-shimmer"
+          className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-saffron-500 to-gold-500 text-white font-semibold px-5 sm:px-6 py-3.5 rounded-full shadow-2xl hover:scale-105 transition animate-shimmer w-full sm:w-auto min-h-[44px]"
           style={{
             backgroundImage: 'linear-gradient(90deg, #f97316, #ffd700, #f97316)',
           }}

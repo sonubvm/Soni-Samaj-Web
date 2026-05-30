@@ -21,6 +21,10 @@ import {
   emptyCoResident,
   emptyFamilyForm,
   FamilyFormData,
+  MARITAL_STATUS_OPTIONS,
+  MaritalStatus,
+  isSpouseSectionVisible,
+  isSpouseRequired,
   StudentType,
 } from '@/types/family';
 import {
@@ -31,6 +35,7 @@ import {
   validateAll,
   validateStep,
 } from '@/lib/validateFamily';
+import PhotoUpload from '@/components/PhotoUpload';
 
 export default function RegistrationForm() {
   const dispatch = useAppDispatch();
@@ -133,9 +138,9 @@ export default function RegistrationForm() {
   const isDuplicateError = error?.includes('already registered');
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-8">
-        <div className="flex gap-2 mb-4">
+    <div className="max-w-4xl mx-auto px-1 sm:px-0">
+      <div className="mb-6 sm:mb-8">
+        <div className="flex gap-1.5 sm:gap-2 mb-4">
           {STEPS.map((s, i) => (
             <button
               key={s.title}
@@ -146,21 +151,21 @@ export default function RegistrationForm() {
             />
           ))}
         </div>
-        <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-saffron-100 flex items-center justify-center text-2xl shrink-0">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-saffron-100 flex items-center justify-center text-xl sm:text-2xl shrink-0">
             {current.icon}
           </div>
-          <div>
-            <p className="text-sm text-saffron-600 font-medium">
+          <div className="min-w-0">
+            <p className="text-xs sm:text-sm text-saffron-600 font-medium">
               Step {step + 1} of {STEPS.length}
             </p>
-            <h2 className="text-2xl font-bold text-gray-800">{current.title}</h2>
-            <p className="text-gray-500 text-sm mt-1">{current.desc}</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{current.title}</h2>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">{current.desc}</p>
           </div>
         </div>
       </div>
 
-      <div className="card shadow-xl border-saffron-100">
+      <div className="card shadow-xl border-saffron-100 p-4 sm:p-6">
         {(error || Object.keys(fieldErrors).length > 0) && (
           <div
             className={`mb-5 p-4 rounded-xl text-sm ${
@@ -197,16 +202,26 @@ export default function RegistrationForm() {
 
         <p className="text-xs text-gray-400 mt-6">Fields marked * are required</p>
 
-        <div className="flex justify-between mt-4 pt-6 border-t border-gray-100">
-          <button type="button" className="btn-secondary" disabled={step === 0} onClick={() => setStep((s) => s - 1)}>
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-4 pt-6 border-t border-gray-100">
+          <button
+            type="button"
+            className="btn-secondary w-full sm:w-auto min-h-[44px]"
+            disabled={step === 0}
+            onClick={() => setStep((s) => s - 1)}
+          >
             <ArrowLeft className="w-4 h-4" /> Back
           </button>
           {step < STEPS.length - 1 ? (
-            <button type="button" className="btn-primary" onClick={goNext}>
+            <button type="button" className="btn-primary w-full sm:w-auto min-h-[44px]" onClick={goNext}>
               Continue <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
-            <button type="button" className="btn-primary" disabled={loading} onClick={handleSubmit}>
+            <button
+              type="button"
+              className="btn-primary w-full sm:w-auto min-h-[44px]"
+              disabled={loading}
+              onClick={handleSubmit}
+            >
               {loading ? 'Submitting...' : 'Submit Registration'}
             </button>
           )}
@@ -233,13 +248,23 @@ function StepContactAddress({
       ? 'This mobile number is already registered. Please use a different number or contact admin.'
       : undefined);
 
+  const handleMaritalStatusChange = (status: MaritalStatus) => {
+    const patch: Partial<FamilyFormData> = {
+      headOfFamily: { ...form.headOfFamily, maritalStatus: status },
+    };
+    if (!isSpouseSectionVisible(status)) {
+      patch.spouse = { name: '', mobile: '', photo: '' };
+    }
+    updateForm(patch);
+  };
+
   return (
     <div className="space-y-6">
       <div className="section-box">
         <h3 className="font-semibold text-gray-800 flex items-center gap-2">
           <Users className="w-4 h-4 text-saffron-500" /> Head of Family
         </h3>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="Full Name *" value={form.headOfFamily.name} error={errors['headOfFamily.name']} onChange={(v) => updateForm({ headOfFamily: { ...form.headOfFamily, name: v } })} />
           <div>
             <Field
@@ -258,14 +283,41 @@ function StepContactAddress({
               <p className="text-xs text-green-600 mt-1">Mobile number is available</p>
             )}
           </div>
+          <div>
+            <label className="label">Marital Status *</label>
+            <select
+              className={`input min-h-[44px] ${errors['headOfFamily.maritalStatus'] ? 'border-red-400 ring-1 ring-red-200' : ''}`}
+              value={form.headOfFamily.maritalStatus || ''}
+              onChange={(e) => handleMaritalStatusChange(e.target.value as MaritalStatus)}
+            >
+              <option value="">Select status</option>
+              {MARITAL_STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </select>
+            {errors['headOfFamily.maritalStatus'] && (
+              <p className="text-xs text-red-600 mt-1">{errors['headOfFamily.maritalStatus']}</p>
+            )}
+          </div>
           <Field label="Email" value={form.headOfFamily.email || ''} type="email" error={errors['headOfFamily.email']} onChange={(v) => updateForm({ headOfFamily: { ...form.headOfFamily, email: v } })} />
+          <div className="md:col-span-2">
+            <PhotoUpload
+              label="Photo"
+              required
+              value={form.headOfFamily.photo}
+              error={errors['headOfFamily.photo']}
+              onChange={(photo) => updateForm({ headOfFamily: { ...form.headOfFamily, photo } })}
+            />
+          </div>
         </div>
       </div>
       <div className="section-box">
         <h3 className="font-semibold text-gray-800 flex items-center gap-2">
           <MapPin className="w-4 h-4 text-saffron-500" /> Address
         </h3>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field label="House No." value={form.address.houseNo || ''} onChange={(v) => updateForm({ address: { ...form.address, houseNo: v } })} />
           <Field label="Street" value={form.address.street || ''} onChange={(v) => updateForm({ address: { ...form.address, street: v } })} />
           <Field label="Village" value={form.address.village || ''} onChange={(v) => updateForm({ address: { ...form.address, village: v } })} />
@@ -298,12 +350,21 @@ function StepParentsIncome({
       {roles.map(({ key, label }) => (
         <div key={key} className="section-box">
           <h3 className="font-semibold text-saffron-700">{label}</h3>
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Name *" value={form.parents[key].name} error={errors[`parents.${key}.name`]} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], name: v } } })} />
             <Field label="Mobile" value={form.parents[key].mobile || ''} error={errors[`parents.${key}.mobile`]} inputMode="numeric" maxLength={10} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], mobile: v.replace(/\D/g, '').slice(0, 10) } } })} />
             <Field label="Occupation" value={form.parents[key].occupation || ''} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], occupation: v } } })} />
             <Field label="Education" value={form.parents[key].education || ''} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], education: v } } })} />
             <Field label="Monthly Income (INR)" type="number" min={0} value={String(form.parents[key].income || 0)} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], income: Number(v) || 0 } } })} />
+            <div className="md:col-span-2">
+              <PhotoUpload
+                label={`${label} Photo`}
+                value={form.parents[key].photo}
+                onChange={(photo) =>
+                  updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], photo } } })
+                }
+              />
+            </div>
           </div>
         </div>
       ))}
@@ -350,19 +411,60 @@ function StepOtherMembers({
     updateForm({ children: updated });
   };
 
+  const showSpouse = isSpouseSectionVisible(form.headOfFamily.maritalStatus);
+  const spouseRequired = isSpouseRequired(form.headOfFamily.maritalStatus);
+
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-sm text-gray-500">This step is optional. Skip if not applicable.</p>
-        <button type="button" className="btn-secondary text-sm" onClick={onSkip}>
+        <button type="button" className="btn-secondary text-sm min-h-[44px] w-full sm:w-auto" onClick={onSkip}>
           Skip to Review
         </button>
       </div>
 
+      {showSpouse && (
+        <div className="section-box">
+          <h3 className="font-semibold text-gray-800 mb-1">
+            Spouse {spouseRequired ? '(Required)' : '(Optional)'}
+          </h3>
+          {form.headOfFamily.maritalStatus === 'Widowed' && (
+            <p className="text-xs text-gray-500 mb-4">
+              You may optionally record deceased spouse details for community records.
+            </p>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field
+              label={spouseRequired ? 'Name *' : 'Name'}
+              value={form.spouse.name || ''}
+              error={errors['spouse.name']}
+              onChange={(v) => updateForm({ spouse: { ...form.spouse, name: v } })}
+            />
+            <Field
+              label={spouseRequired ? 'Mobile *' : 'Mobile'}
+              value={form.spouse.mobile || ''}
+              error={errors['spouse.mobile']}
+              inputMode="numeric"
+              maxLength={10}
+              onChange={(v) =>
+                updateForm({ spouse: { ...form.spouse, mobile: v.replace(/\D/g, '').slice(0, 10) } })
+              }
+            />
+            <div className="md:col-span-2">
+              <PhotoUpload
+                label="Spouse Photo"
+                value={form.spouse.photo}
+                onChange={(photo) => updateForm({ spouse: { ...form.spouse, photo } })}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="section-box">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h3 className="font-semibold text-gray-800">Co-Residents</h3>
-          <button type="button" className="btn-secondary text-sm py-1.5" onClick={addResident}>
+          <button type="button" className="btn-secondary text-sm py-2 min-h-[44px] w-full sm:w-auto" onClick={addResident}>
             <Plus className="w-4 h-4" /> Add Member
           </button>
         </div>
@@ -371,29 +473,41 @@ function StepOtherMembers({
         ) : (
           form.coResidents.map((r, i) => (
             <div key={i} className="p-4 bg-white rounded-xl border border-gray-100 mb-3 space-y-3">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center gap-2">
                 <span className="text-sm font-medium text-gray-600">Member {i + 1}</span>
-                <button type="button" onClick={() => removeResident(i)} className="text-red-500 hover:text-red-700">
+                <button
+                  type="button"
+                  onClick={() => removeResident(i)}
+                  className="text-red-500 hover:text-red-700 p-2 -mr-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label={`Remove member ${i + 1}`}
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <div className="grid md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Name *" value={r.name} error={errors[`coResidents.${i}.name`]} onChange={(v) => updateResident(i, 'name', v)} />
                 <Field label="Relation" value={r.relation || ''} onChange={(v) => updateResident(i, 'relation', v)} />
                 <Field label="Age" type="number" min={0} value={String(r.age || '')} onChange={(v) => updateResident(i, 'age', Number(v) || 0)} />
                 <Field label="Occupation" value={r.occupation || ''} onChange={(v) => updateResident(i, 'occupation', v)} />
                 <Field label="Mobile" value={r.mobile || ''} error={errors[`coResidents.${i}.mobile`]} inputMode="numeric" maxLength={10} onChange={(v) => updateResident(i, 'mobile', v.replace(/\D/g, '').slice(0, 10))} />
+                <div className="md:col-span-2">
+                  <PhotoUpload
+                    label="Photo"
+                    value={r.photo}
+                    onChange={(photo) => updateResident(i, 'photo', photo)}
+                  />
+                </div>
               </div>
             </div>
           ))
         )}
       </div>
       <div className="section-box">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h3 className="font-semibold text-gray-800 flex items-center gap-2">
             <GraduationCap className="w-4 h-4 text-saffron-500" /> Children / Students
           </h3>
-          <button type="button" className="btn-secondary text-sm py-1.5" onClick={addChild}>
+          <button type="button" className="btn-secondary text-sm py-2 min-h-[44px] w-full sm:w-auto" onClick={addChild}>
             <Plus className="w-4 h-4" /> Add Child
           </button>
         </div>
@@ -402,14 +516,19 @@ function StepOtherMembers({
         ) : (
           form.children.map((c, i) => (
             <div key={i} className="p-4 bg-white rounded-xl border border-saffron-100 mb-3 space-y-4">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center gap-2">
                 <span className="text-sm font-medium text-gray-600">Student {i + 1}</span>
-                <button type="button" onClick={() => removeChild(i)} className="text-red-500 hover:text-red-700">
+                <button
+                  type="button"
+                  onClick={() => removeChild(i)}
+                  className="text-red-500 hover:text-red-700 p-2 -mr-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label={`Remove student ${i + 1}`}
+                >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field label="Name *" value={c.name} error={errors[`children.${i}.name`]} onChange={(v) => updateChild(i, 'name', v)} />
                 <div>
                   <label className="label">Gender</label>
@@ -420,7 +539,14 @@ function StepOtherMembers({
                   </select>
                 </div>
                 <Field label="Date of Birth" type="date" value={c.dob || ''} onChange={(v) => updateChild(i, 'dob', v)} />
-                <div className="flex items-center gap-2 md:col-span-2 p-3 rounded-xl bg-saffron-50/80 border border-saffron-100">
+                <div className="md:col-span-2">
+                  <PhotoUpload
+                    label="Photo"
+                    value={c.photo}
+                    onChange={(photo) => updateChild(i, 'photo', photo)}
+                  />
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 sm:col-span-2 p-3 rounded-xl bg-saffron-50/80 border border-saffron-100">
                   <input
                     type="checkbox"
                     id={`studying-${i}`}
@@ -436,13 +562,13 @@ function StepOtherMembers({
 
               <div>
                 <label className="label">Education category</label>
-                <div className="flex gap-2">
+                <div className="flex flex-col xs:flex-row gap-2">
                   {(['School', 'College'] as StudentType[]).map((type) => (
                     <button
                       key={type}
                       type="button"
                       onClick={() => setStudentType(i, type)}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition ${
+                      className={`flex-1 py-3 sm:py-2.5 rounded-xl text-sm font-medium border transition min-h-[44px] ${
                         c.studentType === type
                           ? 'bg-saffron-500 text-white border-saffron-500 shadow-md'
                           : 'bg-white text-gray-600 border-gray-200 hover:border-saffron-300'
@@ -459,7 +585,7 @@ function StepOtherMembers({
                 )}
               </div>
 
-              <div className="grid md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <Field
                   label={
                     c.studentType === 'College'
@@ -515,7 +641,14 @@ function StepOtherMembers({
 function StepReview({ form }: { form: FamilyFormData }) {
   return (
     <div className="space-y-4 text-sm">
-      <ReviewBlock title="Head of Family" lines={[`${form.headOfFamily.name} — ${form.headOfFamily.mobile}`]} />
+      <ReviewBlock
+        title="Head of Family"
+        photo={form.headOfFamily.photo}
+        lines={[
+          `${form.headOfFamily.name} — ${form.headOfFamily.mobile}`,
+          `Marital status: ${form.headOfFamily.maritalStatus || 'Not specified'}`,
+        ]}
+      />
       <ReviewBlock
         title="Address"
         lines={[
@@ -530,7 +663,23 @@ function StepReview({ form }: { form: FamilyFormData }) {
           `Mother: ${form.parents.mother.name} (${form.parents.mother.occupation || 'N/A'})`,
           `Total income: INR ${form.totalFamilyIncome}/month`,
         ]}
+        photos={[
+          form.parents.father.photo ? { label: 'Father', url: form.parents.father.photo } : null,
+          form.parents.mother.photo ? { label: 'Mother', url: form.parents.mother.photo } : null,
+        ].filter(Boolean) as { label: string; url: string }[]}
       />
+      {isSpouseSectionVisible(form.headOfFamily.maritalStatus) &&
+        (form.spouse.name || form.spouse.mobile || form.spouse.photo) && (
+        <ReviewBlock
+          title={form.headOfFamily.maritalStatus === 'Widowed' ? 'Spouse (Deceased)' : 'Spouse'}
+          photo={form.spouse.photo}
+          lines={[
+            form.spouse.name
+              ? `${form.spouse.name}${form.spouse.mobile ? ` — ${form.spouse.mobile}` : ''}`
+              : form.spouse.mobile || 'Details provided',
+          ]}
+        />
+      )}
       {form.coResidents.length > 0 && (
         <ReviewBlock title="Co-Residents" lines={form.coResidents.map((r) => `${r.name} (${r.relation || 'N/A'})`)} />
       )}
@@ -552,10 +701,35 @@ function StepReview({ form }: { form: FamilyFormData }) {
   );
 }
 
-function ReviewBlock({ title, lines }: { title: string; lines: string[] }) {
+function ReviewBlock({
+  title,
+  lines,
+  photo,
+  photos,
+}: {
+  title: string;
+  lines: string[];
+  photo?: string;
+  photos?: { label: string; url: string }[];
+}) {
   return (
     <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
       <h3 className="font-medium text-saffron-700 mb-2">{title}</h3>
+      {(photo || photos?.length) && (
+        <div className="flex flex-wrap gap-3 mb-3">
+          {photo && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photo} alt={title} className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+          )}
+          {photos?.map(({ label, url }) => (
+            <div key={label} className="text-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={url} alt={label} className="w-16 h-16 rounded-lg object-cover border border-gray-200" />
+              <p className="text-xs text-gray-500 mt-1">{label}</p>
+            </div>
+          ))}
+        </div>
+      )}
       <ul className="space-y-1 text-gray-700">
         {lines.map((line) => (
           <li key={line}>{line}</li>
@@ -600,7 +774,7 @@ function Field({
         min={min}
         max={max}
         placeholder={placeholder}
-        className={`input ${error ? 'border-red-400 ring-1 ring-red-200' : 'focus:ring-saffron-400'}`}
+        className={`input min-h-[44px] ${error ? 'border-red-400 ring-1 ring-red-200' : 'focus:ring-saffron-400'}`}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

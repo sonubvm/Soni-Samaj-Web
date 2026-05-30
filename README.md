@@ -1,4 +1,4 @@
-# Soni Samaj Web — Family Registration
+# Soni Samaj Uttarbhartiya Trust Surat Web — Family Registration
 
 Public registration portal. See root [README](../README.md).
 

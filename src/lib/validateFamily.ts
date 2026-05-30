@@ -1,4 +1,4 @@
-import { FamilyFormData } from '@/types/family';
+import { FamilyFormData, isSpouseRequired, MaritalStatus } from '@/types/family';
 
 export type FieldErrors = Record<string, string>;
 
@@ -19,12 +19,22 @@ const isValidPincode = (pincode?: string) => /^[1-9]\d{5}$/.test(trim(pincode));
 
 const isValidEmail = (email?: string) => !email || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trim(email));
 
+const VALID_MARITAL_STATUSES: MaritalStatus[] = ['Married', 'Unmarried', 'Widowed', 'Divorced'];
+
 export function validateStep(step: number, form: FamilyFormData): FieldErrors {
   const errors: FieldErrors = {};
 
   if (step === 0) {
     if (!trim(form.headOfFamily.name)) {
       errors['headOfFamily.name'] = 'Head of family name is required';
+    }
+    if (!trim(form.headOfFamily.photo)) {
+      errors['headOfFamily.photo'] = 'Head of family photo is required';
+    }
+    if (!form.headOfFamily.maritalStatus) {
+      errors['headOfFamily.maritalStatus'] = 'Marital status is required';
+    } else if (!VALID_MARITAL_STATUSES.includes(form.headOfFamily.maritalStatus)) {
+      errors['headOfFamily.maritalStatus'] = 'Select a valid marital status';
     }
     if (!trim(form.headOfFamily.mobile)) {
       errors['headOfFamily.mobile'] = 'Mobile number is required';
@@ -60,6 +70,19 @@ export function validateStep(step: number, form: FamilyFormData): FieldErrors {
   }
 
   if (step === 2) {
+    if (isSpouseRequired(form.headOfFamily.maritalStatus)) {
+      if (!trim(form.spouse?.name)) {
+        errors['spouse.name'] = "Spouse name is required when marital status is Married";
+      }
+      if (!trim(form.spouse?.mobile)) {
+        errors['spouse.mobile'] = "Spouse mobile is required when marital status is Married";
+      } else if (!isValidMobile(form.spouse.mobile)) {
+        errors['spouse.mobile'] = "Spouse's mobile must be 10 digits";
+      }
+    } else if (form.spouse?.mobile && !isValidMobile(form.spouse.mobile)) {
+      errors['spouse.mobile'] = "Spouse's mobile must be 10 digits";
+    }
+
     form.coResidents.forEach((resident, index) => {
       const hasOtherData =
         trim(resident.relation) ||
@@ -133,6 +156,8 @@ export function prepareFamilyPayload(form: FamilyFormData): FamilyFormData {
       name: trim(form.headOfFamily.name),
       mobile: normalizeMobile(form.headOfFamily.mobile),
       email: trim(form.headOfFamily.email),
+      photo: trim(form.headOfFamily.photo),
+      maritalStatus: form.headOfFamily.maritalStatus,
     },
     address: {
       ...form.address,
@@ -148,6 +173,16 @@ export function prepareFamilyPayload(form: FamilyFormData): FamilyFormData {
       father: { ...form.parents.father, name: trim(form.parents.father.name) },
       mother: { ...form.parents.mother, name: trim(form.parents.mother.name) },
     },
+    spouse: isSpouseRequired(form.headOfFamily.maritalStatus) ||
+      trim(form.spouse?.name) ||
+      trim(form.spouse?.mobile) ||
+      trim(form.spouse?.photo)
+      ? {
+          name: trim(form.spouse?.name),
+          mobile: form.spouse?.mobile ? normalizeMobile(form.spouse.mobile) : '',
+          photo: trim(form.spouse?.photo),
+        }
+      : { name: '', mobile: '', photo: '' },
     coResidents: form.coResidents.filter((r) => trim(r.name)),
     children: form.children.filter((c) => trim(c.name)),
   };
@@ -161,6 +196,10 @@ export function formatApiError(message: string): string {
   const map: Record<string, string> = {
     'headOfFamily.name': 'Head of family name is required',
     'headOfFamily.mobile': 'Mobile number is required',
+    'headOfFamily.photo': 'Head of family photo is required',
+    'headOfFamily.maritalStatus': 'Marital status is required',
+    'spouse.name': 'Spouse name is required when marital status is Married',
+    'spouse.mobile': 'Spouse mobile is required when marital status is Married',
     'address.city': 'City is required',
     'address.district': 'District is required',
     'address.state': 'State is required',
@@ -184,7 +223,9 @@ export function getFirstErrorStep(errors: FieldErrors): number {
   if (
     errors['headOfFamily.name'] ||
     errors['headOfFamily.mobile'] ||
+    errors['headOfFamily.photo'] ||
     errors['headOfFamily.email'] ||
+    errors['headOfFamily.maritalStatus'] ||
     errors['address.city'] ||
     errors['address.pincode']
   ) {
@@ -198,7 +239,11 @@ export function getFirstErrorStep(errors: FieldErrors): number {
   ) {
     return 1;
   }
-  if (Object.keys(errors).some((k) => k.startsWith('coResidents') || k.startsWith('children'))) {
+  if (
+    Object.keys(errors).some(
+      (k) => k.startsWith('coResidents') || k.startsWith('children') || k.startsWith('spouse')
+    )
+  ) {
     return 2;
   }
   return 0;
