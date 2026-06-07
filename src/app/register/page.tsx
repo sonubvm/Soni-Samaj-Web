@@ -14,7 +14,7 @@ export default function RegisterPage() {
         </Link>
 
         <div className="mt-4 sm:mt-6 mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Family Registration</h1>
+          <h4 className="text-2xl sm:text-3xl font-bold text-gray-800">Soni Samaj Uttarbhartiya Trust Surat Family Registration</h4>
           <p className="text-gray-600 mt-2 text-sm sm:text-base">
             Fill in the required fields and submit. Optional sections can be skipped.
           </p>
