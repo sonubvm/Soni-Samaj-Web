@@ -29,8 +29,8 @@ export const submitFamily = createAsyncThunk(
       const raw =
         error.response?.data?.message ||
         (error.response?.status === 409
-          ? 'This mobile number is already registered. Duplicate registration is not allowed.'
-          : 'Submission failed. Please fill all required fields.');
+          ? 'validation.duplicateMobile'
+          : 'validation.submissionFailed');
       return rejectWithValue(formatApiError(raw));
     }
   }

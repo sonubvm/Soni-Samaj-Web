@@ -1,8 +1,10 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Camera, Loader2, X } from 'lucide-react';
+import { Camera, ImageIcon, Loader2, X } from 'lucide-react';
 import api from '@/lib/api';
+import { useLanguage } from '@/i18n/LanguageProvider';
+import { translateErrorMessage } from '@/lib/validateFamily';
 
 interface PhotoUploadProps {
   label: string;
@@ -16,23 +18,25 @@ const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
 
 export default function PhotoUpload({ label, value, onChange, required, error }: PhotoUploadProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLanguage();
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
-  const displayError = error || localError;
+  const displayError = error ? translateErrorMessage(error, t) : localError;
 
   const handleFile = async (file: File) => {
     setLocalError(null);
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      setLocalError('Please upload a JPEG, PNG, or WebP image.');
+      setLocalError(t('photoUpload.invalidType'));
       return;
     }
 
     if (file.size > MAX_SIZE_BYTES) {
-      setLocalError('Image must be 5 MB or smaller.');
+      setLocalError(t('photoUpload.tooLarge'));
       return;
     }
 
@@ -48,7 +52,7 @@ export default function PhotoUpload({ label, value, onChange, required, error }:
       );
 
       if (!res.data.success || !res.data.data?.url) {
-        throw new Error(res.data.message || 'Upload failed.');
+        throw new Error(res.data.message || t('photoUpload.uploadFailed'));
       }
 
       onChange(res.data.data.url);
@@ -57,13 +61,15 @@ export default function PhotoUpload({ label, value, onChange, required, error }:
       const message =
         (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
         (err as Error)?.message ||
-        'Failed to upload photo. Please try again.';
+        t('photoUpload.uploadFailed');
       setLocalError(message);
       setPreview(null);
       onChange('');
     } finally {
       setUploading(false);
       URL.revokeObjectURL(objectUrl);
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
     }
   };
 
@@ -71,9 +77,8 @@ export default function PhotoUpload({ label, value, onChange, required, error }:
     onChange('');
     setPreview(null);
     setLocalError(null);
-    if (inputRef.current) {
-      inputRef.current.value = '';
-    }
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
   };
 
   const photoSrc = preview || value;
@@ -106,10 +111,20 @@ export default function PhotoUpload({ label, value, onChange, required, error }:
 
         <div className="flex-1 space-y-2 w-full">
           <input
-            ref={inputRef}
+            ref={cameraInputRef}
             type="file"
-            accept={ACCEPTED_TYPES.join(',')}
+            accept="image/*"
             capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleFile(file);
+            }}
+          />
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/*"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -121,9 +136,19 @@ export default function PhotoUpload({ label, value, onChange, required, error }:
               type="button"
               className="btn-secondary text-sm py-2.5 min-h-[44px] w-full sm:w-auto"
               disabled={uploading}
-              onClick={() => inputRef.current?.click()}
+              onClick={() => cameraInputRef.current?.click()}
             >
-              {photoSrc ? 'Change Photo' : 'Upload Photo'}
+              <Camera className="w-4 h-4" />
+              {photoSrc ? t('photoUpload.changePhoto') : t('photoUpload.takePhoto')}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary text-sm py-2.5 min-h-[44px] w-full sm:w-auto"
+              disabled={uploading}
+              onClick={() => galleryInputRef.current?.click()}
+            >
+              <ImageIcon className="w-4 h-4" />
+              {t('photoUpload.chooseGallery')}
             </button>
             {photoSrc && !uploading && (
               <button
@@ -131,11 +156,11 @@ export default function PhotoUpload({ label, value, onChange, required, error }:
                 className="btn-secondary text-sm py-2.5 min-h-[44px] w-full sm:w-auto text-red-600"
                 onClick={clearPhoto}
               >
-                <X className="w-4 h-4" /> Remove
+                <X className="w-4 h-4" /> {t('photoUpload.remove')}
               </button>
             )}
           </div>
-          <p className="text-xs text-gray-400">JPEG, PNG or WebP · max 5 MB</p>
+          <p className="text-xs text-gray-400">{t('photoUpload.fileHint')}</p>
           {displayError && <p className="text-xs text-red-600">{displayError}</p>}
         </div>
       </div>

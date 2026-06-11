@@ -17,73 +17,85 @@ import {
   IndianRupee,
 } from 'lucide-react';
 import clsx from 'clsx';
-
-const steps = [
-  {
-    num: '01',
-    title: 'Contact & Address',
-    desc: 'Head of family name, mobile and full residential address.',
-    icon: MapPin,
-  },
-  {
-    num: '02',
-    title: 'Parents & Income',
-    desc: 'Father and mother details with occupation and family income.',
-    icon: IndianRupee,
-  },
-  {
-    num: '03',
-    title: 'Submit & Done',
-    desc: 'Add children or co-residents if needed, review and submit.',
-    icon: CheckCircle2,
-  },
-];
-
-const features = [
-  {
-    icon: ClipboardList,
-    title: 'Simple 4-Step Form',
-    desc: 'Only required fields are marked. Optional sections can be skipped.',
-  },
-  {
-    icon: Shield,
-    title: 'Secure & Private',
-    desc: 'Your data is stored safely and managed by community admins only.',
-  },
-  {
-    icon: Users,
-    title: 'Community Registry',
-    desc: 'Help build a unified Soni Samaj Uttarbhartiya Trust Surat family database across regions.',
-  },
-];
-
-const checklist = [
-  'Head of family name, mobile number & photo',
-  'Marital status (spouse required if married)',
-  'Full address (city, district, state, pincode)',
-  'Father & mother names (occupation optional)',
-  'Spouse photo (optional even when married)',
-  'Children school details (optional)',
-];
-
-const trustBadges = [
-  'Free Registration',
-  '5 Minute Form',
-  '100% Secure',
-  'Mobile Friendly',
-  'Step-by-Step Guide',
-  'Skip Optional Fields',
-];
-
-const stats = [
-  { label: 'Easy Steps', value: '4', icon: FileText },
-  { label: 'Avg. Time', value: '5 min', icon: Clock },
-  { label: 'Data Safe', value: '100%', icon: Lock },
-];
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useLanguage } from '@/i18n/LanguageProvider';
 
 export default function HomePage() {
+  const { t } = useLanguage();
   const [showFloatingCta, setShowFloatingCta] = useState(false);
   const [activeStep, setActiveStep] = useState(0);
+
+  const steps = [
+    {
+      num: '01',
+      title: t('home.howStep1Title'),
+      desc: t('home.howStep1Desc'),
+      icon: MapPin,
+    },
+    {
+      num: '02',
+      title: t('home.howStep2Title'),
+      desc: t('home.howStep2Desc'),
+      icon: IndianRupee,
+    },
+    {
+      num: '03',
+      title: t('home.howStep3Title'),
+      desc: t('home.howStep3Desc'),
+      icon: CheckCircle2,
+    },
+  ];
+
+  const features = [
+    {
+      icon: ClipboardList,
+      title: t('home.feature1Title'),
+      desc: t('home.feature1Desc'),
+    },
+    {
+      icon: Shield,
+      title: t('home.feature2Title'),
+      desc: t('home.feature2Desc'),
+    },
+    {
+      icon: Users,
+      title: t('home.feature3Title'),
+      desc: t('home.feature3Desc'),
+    },
+  ];
+
+  const checklist = [
+    t('home.checklist1'),
+    t('home.checklist2'),
+    t('home.checklist3'),
+    t('home.checklist4'),
+    t('home.checklist5'),
+    t('home.checklist6'),
+  ];
+
+  const trustBadges = [
+    t('home.badgeFree'),
+    t('home.badgeFiveMin'),
+    t('home.badgeSecure'),
+    t('home.badgeMobile'),
+    t('home.badgeGuide'),
+    t('home.badgeSkip'),
+  ];
+
+  const stats = [
+    { label: t('home.statEasySteps'), value: '4', icon: FileText },
+    { label: t('home.statAvgTime'), value: t('home.statAvgTimeValue'), icon: Clock },
+    { label: t('home.statDataSafe'), value: '100%', icon: Lock },
+  ];
+
+  const heroTags = [t('home.tagNoLogin'), t('home.tagMobileFriendly'), t('home.tagSkipOptional')];
+
+  const previewSteps = [
+    t('home.stepContact'),
+    t('home.stepParents'),
+    t('home.stepOther'),
+    t('home.stepReview'),
+  ];
 
   useEffect(() => {
     const onScroll = () => setShowFloatingCta(window.scrollY > 400);
@@ -93,25 +105,26 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden">
-      {/* Navbar */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-saffron-100 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-saffron-500 to-gold-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-saffron-500 to-gold-500 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">
               SS
             </div>
-            <span className="font-semibold text-gray-800 hidden sm:inline">Soni Samaj Uttarbhartiya Trust Surat</span>
+            <span className="font-semibold text-gray-800 hidden sm:inline">{t('nav.orgName')}</span>
             <span className="font-semibold text-gray-800 sm:hidden text-sm leading-tight max-w-[10rem]">
-              Soni Samaj Uttarbhartiya Trust Surat
+              {t('nav.orgName')}
             </span>
           </div>
-          <Link href="/register" className="btn-primary text-sm py-2 px-5 hidden sm:inline-flex">
-            Register Now
-          </Link>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <LanguageSwitcher />
+            <Link href="/register" className="btn-primary text-sm py-2 px-5 hidden sm:inline-flex">
+              {t('nav.registerNow')}
+            </Link>
+          </div>
         </div>
       </nav>
 
-      {/* Hero */}
       <header className="relative bg-gradient-to-br from-saffron-500 via-saffron-400 to-gold-500 text-white hero-pattern overflow-hidden">
         <div className="absolute top-10 left-[10%] w-32 h-32 rounded-full bg-white/10 blur-2xl animate-float pointer-events-none" />
         <div className="absolute bottom-20 right-[15%] w-48 h-48 rounded-full bg-gold-400/20 blur-3xl animate-float-slow pointer-events-none" />
@@ -122,36 +135,33 @@ export default function HomePage() {
             <div className="animate-fade-up">
               <span className="inline-flex items-center gap-2 bg-white/20 backdrop-blur rounded-full px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
                 <Sparkles className="w-4 h-4" />
-                Family Registration Portal
+                {t('home.familyPortal')}
               </span>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-4 sm:mb-6">
-                Register Your Family in{' '}
+                {t('home.heroTitle')}{' '}
                 <span className="underline decoration-gold-400 decoration-4 underline-offset-4">
-                  Minutes
+                  {t('home.heroTitleHighlight')}
                 </span>
               </h1>
-              <p className="text-lg text-white/90 mb-8 leading-relaxed max-w-xl">
-                Join the Soni Samaj Uttarbhartiya Trust Surat community registry. Submit contact details, address, parents,
-                children and income — quick, secure and completely free.
-              </p>
+              <p className="text-lg text-white/90 mb-8 leading-relaxed max-w-xl">{t('home.heroDesc')}</p>
               <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-6 sm:mb-8">
                 <Link
                   href="/register"
                   className="cta-pulse inline-flex items-center justify-center gap-2 bg-white text-saffron-700 font-semibold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl shadow-xl hover:shadow-2xl hover:scale-[1.03] transition relative z-10 min-h-[44px] w-full sm:w-auto"
                 >
                   <Users className="w-5 h-5" />
-                  Start Registration — It&apos;s Free
+                  {t('home.startRegistration')}
                   <ArrowRight className="w-4 h-4" />
                 </Link>
                 <a
                   href="#how-it-works"
                   className="inline-flex items-center justify-center gap-2 border-2 border-white/50 text-white font-medium px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl hover:bg-white/15 transition min-h-[44px] w-full sm:w-auto"
                 >
-                  See How It Works
+                  {t('home.seeHowItWorks')}
                 </a>
               </div>
               <div className="flex flex-wrap gap-3">
-                {['No login needed', 'Mobile friendly', 'Skip optional fields'].map((tag) => (
+                {heroTags.map((tag) => (
                   <span
                     key={tag}
                     className="inline-flex items-center gap-1.5 text-sm bg-white/15 rounded-full px-3 py-1 border border-white/20"
@@ -163,7 +173,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Hero card preview */}
             <div className="animate-fade-up-delay hidden lg:block">
               <div className="bg-white rounded-2xl shadow-2xl p-6 text-gray-800 rotate-1 hover:rotate-0 transition-transform duration-500">
                 <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-100">
@@ -171,50 +180,46 @@ export default function HomePage() {
                     <Users className="w-5 h-5 text-saffron-600" />
                   </div>
                   <div>
-                    <p className="font-semibold">Registration Preview</p>
-                    <p className="text-xs text-gray-500">4 simple steps</p>
+                    <p className="font-semibold">{t('home.previewTitle')}</p>
+                    <p className="text-xs text-gray-500">{t('home.previewSubtitle')}</p>
                   </div>
                 </div>
                 <div className="space-y-3">
-                  {['Contact & Address', 'Parents & Income', 'Other Members', 'Review & Submit'].map(
-                    (s, i) => (
-                      <div
-                        key={s}
+                  {previewSteps.map((s, i) => (
+                    <div
+                      key={s}
+                      className={clsx(
+                        'flex items-center gap-3 p-3 rounded-xl text-sm',
+                        i === 0 ? 'bg-saffron-50 border border-saffron-200' : 'bg-gray-50'
+                      )}
+                    >
+                      <span
                         className={clsx(
-                          'flex items-center gap-3 p-3 rounded-xl text-sm',
-                          i === 0 ? 'bg-saffron-50 border border-saffron-200' : 'bg-gray-50'
+                          'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold',
+                          i === 0 ? 'bg-saffron-500 text-white' : 'bg-gray-200 text-gray-500'
                         )}
                       >
-                        <span
-                          className={clsx(
-                            'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold',
-                            i === 0 ? 'bg-saffron-500 text-white' : 'bg-gray-200 text-gray-500'
-                          )}
-                        >
-                          {i + 1}
+                        {i + 1}
+                      </span>
+                      <span className={i === 0 ? 'font-medium text-saffron-800' : 'text-gray-600'}>
+                        {s}
+                      </span>
+                      {i === 0 && (
+                        <span className="ml-auto text-xs text-saffron-600 font-medium">
+                          {t('home.startHere')}
                         </span>
-                        <span className={i === 0 ? 'font-medium text-saffron-800' : 'text-gray-600'}>
-                          {s}
-                        </span>
-                        {i === 0 && (
-                          <span className="ml-auto text-xs text-saffron-600 font-medium">Start here →</span>
-                        )}
-                      </div>
-                    )
-                  )}
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <Link
-                  href="/register"
-                  className="mt-5 w-full btn-primary py-3 text-base justify-center"
-                >
-                  Open Form Now
+                <Link href="/register" className="mt-5 w-full btn-primary py-3 text-base justify-center">
+                  {t('home.openFormNow')}
                 </Link>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats bar */}
         <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8 sm:pb-12">
           <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6">
             {stats.map(({ label, value, icon: Icon }) => (
@@ -231,7 +236,6 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Marquee trust badges */}
       <div className="bg-saffron-600 text-white py-3 overflow-hidden border-y border-saffron-700/30">
         <div className="flex animate-marquee whitespace-nowrap">
           {[...trustBadges, ...trustBadges].map((badge, i) => (
@@ -243,17 +247,13 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* What you'll need */}
       <section className="max-w-6xl mx-auto px-6 py-16 md:py-20">
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800 mb-3">What You&apos;ll Need</h2>
-            <p className="text-gray-600 mb-6">
-              Keep these details handy before you start. Only starred fields are mandatory — everything
-              else is optional.
-            </p>
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">{t('home.whatYouNeed')}</h2>
+            <p className="text-gray-600 mb-6">{t('home.whatYouNeedDesc')}</p>
             <Link href="/register" className="btn-primary">
-              I&apos;m Ready — Start Form
+              {t('home.readyStart')}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -271,14 +271,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How it works — interactive */}
       <section id="how-it-works" className="bg-saffron-50/60 py-16 md:py-20">
         <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-3">How It Works</h2>
-            <p className="text-gray-600 max-w-xl mx-auto">
-              Hover or tap each step to see what you&apos;ll fill in.
-            </p>
+            <h2 className="text-3xl font-bold text-gray-800 mb-3">{t('home.howItWorks')}</h2>
+            <p className="text-gray-600 max-w-xl mx-auto">{t('home.howItWorksDesc')}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {steps.map(({ num, title, desc, icon: Icon }, i) => (
@@ -313,14 +310,13 @@ export default function HomePage() {
           </div>
           <div className="text-center mt-10">
             <Link href="/register" className="btn-primary text-base px-8 py-3">
-              Begin Step 1 Now
+              {t('home.beginStep1')}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Features */}
       <section className="max-w-6xl mx-auto px-6 py-16 md:py-20">
         <div className="grid md:grid-cols-3 gap-6">
           {features.map(({ icon: Icon, title, desc }) => (
@@ -340,40 +336,31 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Social proof */}
       <section className="bg-gradient-to-r from-saffron-500 to-gold-500 py-14">
         <div className="max-w-6xl mx-auto px-6 text-center text-white">
           <GraduationCap className="w-10 h-10 mx-auto mb-4 opacity-90" />
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">Join the Community Registry</h2>
-          <p className="text-white/90 max-w-2xl mx-auto mb-2">
-            Every registered family strengthens our community database — helping Soni Samaj Uttarbhartiya Trust Surat stay
-            connected with accurate family records across cities and districts.
-          </p>
-          <p className="text-white/70 text-sm mb-8">Your contribution takes less than 5 minutes.</p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">{t('home.joinCommunity')}</h2>
+          <p className="text-white/90 max-w-2xl mx-auto mb-2">{t('home.joinCommunityDesc')}</p>
+          <p className="text-white/70 text-sm mb-8">{t('home.joinCommunityNote')}</p>
           <Link
             href="/register"
             className="inline-flex items-center gap-2 bg-white text-saffron-700 font-semibold px-10 py-4 rounded-xl shadow-xl hover:scale-105 transition text-lg"
           >
-            Register My Family Today
+            {t('home.registerToday')}
             <ArrowRight className="w-5 h-5" />
           </Link>
         </div>
       </section>
 
-      {/* Final CTA */}
       <section className="max-w-6xl mx-auto px-6 py-16">
         <div className="card border-2 border-saffron-200 text-center py-12 px-6 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-saffron-50 via-transparent to-gold-50 pointer-events-none" />
           <div className="relative">
             <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-saffron-500" />
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">
-              Ready to Get Started?
-            </h2>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">
-              Click below to open the registration form. No account needed — just fill and submit.
-            </p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-3">{t('home.readyTitle')}</h2>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">{t('home.readyDesc')}</p>
             <Link href="/register" className="btn-primary text-base px-10 py-3.5">
-              Open Registration Form
+              {t('home.openRegistration')}
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
@@ -381,10 +368,9 @@ export default function HomePage() {
       </section>
 
       <footer className="border-t border-gray-100 py-8 text-center text-sm text-gray-500">
-        © Soni Samaj Uttarbhartiya Trust Surat Family Registration Portal
+        {t('home.footer')}
       </footer>
 
-      {/* Floating CTA on scroll */}
       <div
         className={clsx(
           'fixed bottom-4 right-4 sm:bottom-6 sm:right-6 left-4 sm:left-auto z-50 transition-all duration-300',
@@ -399,7 +385,7 @@ export default function HomePage() {
           }}
         >
           <Users className="w-5 h-5" />
-          Register Now
+          {t('nav.registerNow')}
         </Link>
       </div>
     </div>

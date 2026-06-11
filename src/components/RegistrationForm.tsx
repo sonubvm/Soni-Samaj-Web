@@ -28,16 +28,19 @@ import {
   StudentType,
 } from '@/types/family';
 import {
-  errorsToList,
   FieldErrors,
   getFirstErrorStep,
   STEPS,
+  translateErrorMessage,
+  translateErrorsList,
   validateAll,
   validateStep,
 } from '@/lib/validateFamily';
 import PhotoUpload from '@/components/PhotoUpload';
+import { useLanguage } from '@/i18n/LanguageProvider';
 
 export default function RegistrationForm() {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { loading, success, error } = useAppSelector((state) => state.family);
   const [step, setStep] = useState(0);
@@ -75,8 +78,7 @@ export default function RegistrationForm() {
   const goNext = () => {
     const errors = validateStep(step, form);
     if (step === 0 && mobileStatus === 'taken') {
-      errors['headOfFamily.mobile'] =
-        'This mobile number is already registered. Please use a different number or contact admin.';
+      errors['headOfFamily.mobile'] = 'form.mobileTaken';
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -94,8 +96,7 @@ export default function RegistrationForm() {
   const handleSubmit = async () => {
     const errors = validateAll(form);
     if (mobileStatus === 'taken') {
-      errors['headOfFamily.mobile'] =
-        'This mobile number is already registered. Please use a different number or contact admin.';
+      errors['headOfFamily.mobile'] = 'form.mobileTaken';
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
@@ -110,8 +111,8 @@ export default function RegistrationForm() {
     return (
       <div className="max-w-lg mx-auto card text-center py-12 animate-fade-up">
         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Registration Successful</h2>
-        <p className="text-gray-600 mb-6">Your family details have been saved successfully.</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('form.successTitle')}</h2>
+        <p className="text-gray-600 mb-6">{t('form.successDesc')}</p>
 
         <div className="flex gap-3 justify-center flex-wrap">
           <button
@@ -124,10 +125,10 @@ export default function RegistrationForm() {
               setStep(0);
             }}
           >
-            Register Another
+            {t('form.registerAnother')}
           </button>
           <Link href="/" className="btn-primary">
-            Go Home
+            {t('form.goHome')}
           </Link>
         </div>
       </div>
@@ -135,7 +136,7 @@ export default function RegistrationForm() {
   }
 
   const current = STEPS[step];
-  const isDuplicateError = error?.includes('already registered');
+  const isDuplicateError = error?.includes('validation.duplicateMobile') || error?.includes('already registered');
 
   return (
     <div className="max-w-4xl mx-auto px-1 sm:px-0">
@@ -143,11 +144,11 @@ export default function RegistrationForm() {
         <div className="flex gap-1.5 sm:gap-2 mb-4">
           {STEPS.map((s, i) => (
             <button
-              key={s.title}
+              key={s.titleKey}
               type="button"
               onClick={() => i < step && setStep(i)}
               className={`flex-1 h-2 rounded-full transition-all ${i <= step ? 'bg-gradient-to-r from-saffron-500 to-gold-500' : 'bg-gray-200'}`}
-              aria-label={`Step ${i + 1}: ${s.title}`}
+              aria-label={`${t('form.stepOf', { current: i + 1, total: STEPS.length })}: ${t(s.titleKey)}`}
             />
           ))}
         </div>
@@ -157,10 +158,10 @@ export default function RegistrationForm() {
           </div>
           <div className="min-w-0">
             <p className="text-xs sm:text-sm text-saffron-600 font-medium">
-              Step {step + 1} of {STEPS.length}
+              {t('form.stepOf', { current: step + 1, total: STEPS.length })}
             </p>
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{current.title}</h2>
-            <p className="text-gray-500 text-xs sm:text-sm mt-1">{current.desc}</p>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">{t(current.titleKey)}</h2>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">{t(current.descKey)}</p>
           </div>
         </div>
       </div>
@@ -176,12 +177,14 @@ export default function RegistrationForm() {
           >
             <p className="font-semibold mb-2 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              {isDuplicateError ? 'Duplicate registration blocked' : 'Please fix the following:'}
+              {isDuplicateError ? t('form.duplicateBlocked') : t('form.fixErrors')}
             </p>
             <ul className="list-disc list-inside space-y-0.5">
               {error
-                ? error.split('\n').map((msg) => <li key={msg}>{msg}</li>)
-                : errorsToList(fieldErrors).map((msg) => <li key={msg}>{msg}</li>)}
+                ? error.split('\n').map((msg) => (
+                    <li key={msg}>{translateErrorMessage(msg, t)}</li>
+                  ))
+                : translateErrorsList(fieldErrors, t).map((msg) => <li key={msg}>{msg}</li>)}
             </ul>
           </div>
         )}
@@ -200,7 +203,7 @@ export default function RegistrationForm() {
         )}
         {step === 3 && <StepReview form={form} />}
 
-        <p className="text-xs text-gray-400 mt-6">Fields marked * are required</p>
+        <p className="text-xs text-gray-400 mt-6">{t('form.requiredNote')}</p>
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 mt-4 pt-6 border-t border-gray-100">
           <button
@@ -209,11 +212,11 @@ export default function RegistrationForm() {
             disabled={step === 0}
             onClick={() => setStep((s) => s - 1)}
           >
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4" /> {t('form.back')}
           </button>
           {step < STEPS.length - 1 ? (
             <button type="button" className="btn-primary w-full sm:w-auto min-h-[44px]" onClick={goNext}>
-              Continue <ArrowRight className="w-4 h-4" />
+              {t('form.continue')} <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <button
@@ -222,7 +225,7 @@ export default function RegistrationForm() {
               disabled={loading}
               onClick={handleSubmit}
             >
-              {loading ? 'Submitting...' : 'Submit Registration'}
+              {loading ? t('form.submitting') : t('form.submit')}
             </button>
           )}
         </div>
@@ -242,11 +245,10 @@ function StepContactAddress({
   errors: FieldErrors;
   mobileStatus: 'idle' | 'checking' | 'available' | 'taken';
 }) {
+  const { t } = useLanguage();
   const mobileError =
     errors['headOfFamily.mobile'] ||
-    (mobileStatus === 'taken'
-      ? 'This mobile number is already registered. Please use a different number or contact admin.'
-      : undefined);
+    (mobileStatus === 'taken' ? 'form.mobileTaken' : undefined);
 
   const handleMaritalStatusChange = (status: MaritalStatus) => {
     const patch: Partial<FamilyFormData> = {
@@ -262,49 +264,49 @@ function StepContactAddress({
     <div className="space-y-6">
       <div className="section-box">
         <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-          <Users className="w-4 h-4 text-saffron-500" /> Head of Family
+          <Users className="w-4 h-4 text-saffron-500" /> {t('form.headOfFamily')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="Full Name *" value={form.headOfFamily.name} error={errors['headOfFamily.name']} onChange={(v) => updateForm({ headOfFamily: { ...form.headOfFamily, name: v } })} />
+          <Field label={t('form.fullName')} value={form.headOfFamily.name} error={errors['headOfFamily.name']} onChange={(v) => updateForm({ headOfFamily: { ...form.headOfFamily, name: v } })} />
           <div>
             <Field
-              label="Mobile *"
+              label={t('form.mobile')}
               value={form.headOfFamily.mobile || ''}
               error={mobileError}
-              hint="10-digit number; checked live against existing registrations"
+              hint={t('form.mobileHint')}
               inputMode="numeric"
               maxLength={10}
               onChange={(v) => updateForm({ headOfFamily: { ...form.headOfFamily, mobile: v.replace(/\D/g, '').slice(0, 10) } })}
             />
             {mobileStatus === 'checking' && (
-              <p className="text-xs text-gray-500 mt-1">Checking availability…</p>
+              <p className="text-xs text-gray-500 mt-1">{t('form.checkingMobile')}</p>
             )}
             {mobileStatus === 'available' && !mobileError && (
-              <p className="text-xs text-green-600 mt-1">Mobile number is available</p>
+              <p className="text-xs text-green-600 mt-1">{t('form.mobileAvailable')}</p>
             )}
           </div>
           <div>
-            <label className="label">Marital Status *</label>
+            <label className="label">{t('form.maritalStatus')}</label>
             <select
               className={`input min-h-[44px] ${errors['headOfFamily.maritalStatus'] ? 'border-red-400 ring-1 ring-red-200' : ''}`}
               value={form.headOfFamily.maritalStatus || ''}
               onChange={(e) => handleMaritalStatusChange(e.target.value as MaritalStatus)}
             >
-              <option value="">Select status</option>
+              <option value="">{t('form.selectStatus')}</option>
               {MARITAL_STATUS_OPTIONS.map((status) => (
                 <option key={status} value={status}>
-                  {status}
+                  {t(`maritalStatus.${status}`)}
                 </option>
               ))}
             </select>
             {errors['headOfFamily.maritalStatus'] && (
-              <p className="text-xs text-red-600 mt-1">{errors['headOfFamily.maritalStatus']}</p>
+              <p className="text-xs text-red-600 mt-1">{translateErrorMessage(errors['headOfFamily.maritalStatus'], t)}</p>
             )}
           </div>
-          <Field label="Email" value={form.headOfFamily.email || ''} type="email" error={errors['headOfFamily.email']} onChange={(v) => updateForm({ headOfFamily: { ...form.headOfFamily, email: v } })} />
+          <Field label={t('form.email')} value={form.headOfFamily.email || ''} type="email" error={errors['headOfFamily.email']} onChange={(v) => updateForm({ headOfFamily: { ...form.headOfFamily, email: v } })} />
           <div className="md:col-span-2">
             <PhotoUpload
-              label="Photo"
+              label={t('form.photo')}
               required
               value={form.headOfFamily.photo}
               error={errors['headOfFamily.photo']}
@@ -315,16 +317,16 @@ function StepContactAddress({
       </div>
       <div className="section-box">
         <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-saffron-500" /> Address
+          <MapPin className="w-4 h-4 text-saffron-500" /> {t('form.address')}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="House No." value={form.address.houseNo || ''} onChange={(v) => updateForm({ address: { ...form.address, houseNo: v } })} />
-          <Field label="Street" value={form.address.street || ''} onChange={(v) => updateForm({ address: { ...form.address, street: v } })} />
-          <Field label="Village" value={form.address.village || ''} onChange={(v) => updateForm({ address: { ...form.address, village: v } })} />
-          <Field label="City *" value={form.address.city} error={errors['address.city']} onChange={(v) => updateForm({ address: { ...form.address, city: v } })} />
-          <Field label="District *" value={form.address.district} error={errors['address.district']} onChange={(v) => updateForm({ address: { ...form.address, district: v } })} />
-          <Field label="State *" value={form.address.state} error={errors['address.state']} onChange={(v) => updateForm({ address: { ...form.address, state: v } })} />
-          <Field label="Pincode *" value={form.address.pincode || ''} error={errors['address.pincode']} hint="6-digit Indian pincode" inputMode="numeric" maxLength={6} onChange={(v) => updateForm({ address: { ...form.address, pincode: v.replace(/\D/g, '').slice(0, 6) } })} />
+          <Field label={t('form.houseNo')} value={form.address.houseNo || ''} onChange={(v) => updateForm({ address: { ...form.address, houseNo: v } })} />
+          <Field label={t('form.street')} value={form.address.street || ''} onChange={(v) => updateForm({ address: { ...form.address, street: v } })} />
+          <Field label={t('form.village')} value={form.address.village || ''} onChange={(v) => updateForm({ address: { ...form.address, village: v } })} />
+          <Field label={t('form.city')} value={form.address.city} error={errors['address.city']} onChange={(v) => updateForm({ address: { ...form.address, city: v } })} />
+          <Field label={t('form.district')} value={form.address.district} error={errors['address.district']} onChange={(v) => updateForm({ address: { ...form.address, district: v } })} />
+          <Field label={t('form.state')} value={form.address.state} error={errors['address.state']} onChange={(v) => updateForm({ address: { ...form.address, state: v } })} />
+          <Field label={t('form.pincode')} value={form.address.pincode || ''} error={errors['address.pincode']} hint={t('form.pincodeHint')} inputMode="numeric" maxLength={6} onChange={(v) => updateForm({ address: { ...form.address, pincode: v.replace(/\D/g, '').slice(0, 6) } })} />
         </div>
       </div>
     </div>
@@ -340,25 +342,26 @@ function StepParentsIncome({
   updateForm: (p: Partial<FamilyFormData>) => void;
   errors: FieldErrors;
 }) {
+  const { t } = useLanguage();
   const roles = [
-    { key: 'father' as const, label: 'Father' },
-    { key: 'mother' as const, label: 'Mother' },
+    { key: 'father' as const, label: t('form.father'), photoLabel: t('form.fatherPhoto') },
+    { key: 'mother' as const, label: t('form.mother'), photoLabel: t('form.motherPhoto') },
   ];
 
   return (
     <div className="space-y-6">
-      {roles.map(({ key, label }) => (
+      {roles.map(({ key, label, photoLabel }) => (
         <div key={key} className="section-box">
           <h3 className="font-semibold text-saffron-700">{label}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Field label="Name *" value={form.parents[key].name} error={errors[`parents.${key}.name`]} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], name: v } } })} />
-            <Field label="Mobile" value={form.parents[key].mobile || ''} error={errors[`parents.${key}.mobile`]} inputMode="numeric" maxLength={10} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], mobile: v.replace(/\D/g, '').slice(0, 10) } } })} />
-            <Field label="Occupation" value={form.parents[key].occupation || ''} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], occupation: v } } })} />
-            <Field label="Education" value={form.parents[key].education || ''} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], education: v } } })} />
-            <Field label="Monthly Income (INR)" type="number" min={0} value={String(form.parents[key].income || 0)} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], income: Number(v) || 0 } } })} />
+            <Field label={t('form.name')} value={form.parents[key].name} error={errors[`parents.${key}.name`]} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], name: v } } })} />
+            <Field label={t('form.mobile').replace(' *', '')} value={form.parents[key].mobile || ''} error={errors[`parents.${key}.mobile`]} inputMode="numeric" maxLength={10} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], mobile: v.replace(/\D/g, '').slice(0, 10) } } })} />
+            <Field label={t('form.occupation')} value={form.parents[key].occupation || ''} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], occupation: v } } })} />
+            <Field label={t('form.education')} value={form.parents[key].education || ''} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], education: v } } })} />
+            <Field label={t('form.monthlyIncome')} type="number" min={0} value={String(form.parents[key].income || 0)} onChange={(v) => updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], income: Number(v) || 0 } } })} />
             <div className="md:col-span-2">
               <PhotoUpload
-                label={`${label} Photo`}
+                label={photoLabel}
                 value={form.parents[key].photo}
                 onChange={(photo) =>
                   updateForm({ parents: { ...form.parents, [key]: { ...form.parents[key], photo } } })
@@ -368,7 +371,7 @@ function StepParentsIncome({
           </div>
         </div>
       ))}
-      <Field label="Total Family Income (INR/month)" type="number" min={0} value={String(form.totalFamilyIncome)} onChange={(v) => updateForm({ totalFamilyIncome: Number(v) || 0 })} />
+      <Field label={t('form.totalFamilyIncome')} type="number" min={0} value={String(form.totalFamilyIncome)} onChange={(v) => updateForm({ totalFamilyIncome: Number(v) || 0 })} />
     </div>
   );
 }
@@ -411,37 +414,36 @@ function StepOtherMembers({
     updateForm({ children: updated });
   };
 
+  const { t } = useLanguage();
   const showSpouse = isSpouseSectionVisible(form.headOfFamily.maritalStatus);
   const spouseRequired = isSpouseRequired(form.headOfFamily.maritalStatus);
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <p className="text-sm text-gray-500">This step is optional. Skip if not applicable.</p>
+        <p className="text-sm text-gray-500">{t('form.optionalStep')}</p>
         <button type="button" className="btn-secondary text-sm min-h-[44px] w-full sm:w-auto" onClick={onSkip}>
-          Skip to Review
+          {t('form.skipToReview')}
         </button>
       </div>
 
       {showSpouse && (
         <div className="section-box">
           <h3 className="font-semibold text-gray-800 mb-1">
-            Spouse {spouseRequired ? '(Required)' : '(Optional)'}
+            {spouseRequired ? t('form.spouseRequired') : t('form.spouseOptional')}
           </h3>
           {form.headOfFamily.maritalStatus === 'Widowed' && (
-            <p className="text-xs text-gray-500 mb-4">
-              You may optionally record deceased spouse details for community records.
-            </p>
+            <p className="text-xs text-gray-500 mb-4">{t('form.spouseWidowedHint')}</p>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field
-              label={spouseRequired ? 'Name *' : 'Name'}
+              label={spouseRequired ? t('form.name') : t('form.name').replace(' *', '')}
               value={form.spouse.name || ''}
               error={errors['spouse.name']}
               onChange={(v) => updateForm({ spouse: { ...form.spouse, name: v } })}
             />
             <Field
-              label={spouseRequired ? 'Mobile *' : 'Mobile'}
+              label={spouseRequired ? t('form.mobile') : t('form.mobile').replace(' *', '')}
               value={form.spouse.mobile || ''}
               error={errors['spouse.mobile']}
               inputMode="numeric"
@@ -452,7 +454,7 @@ function StepOtherMembers({
             />
             <div className="md:col-span-2">
               <PhotoUpload
-                label="Spouse Photo"
+                label={t('form.spousePhoto')}
                 value={form.spouse.photo}
                 onChange={(photo) => updateForm({ spouse: { ...form.spouse, photo } })}
               />
@@ -463,18 +465,18 @@ function StepOtherMembers({
 
       <div className="section-box">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <h3 className="font-semibold text-gray-800">Co-Residents</h3>
+          <h3 className="font-semibold text-gray-800">{t('form.coResidents')}</h3>
           <button type="button" className="btn-secondary text-sm py-2 min-h-[44px] w-full sm:w-auto" onClick={addResident}>
-            <Plus className="w-4 h-4" /> Add Member
+            <Plus className="w-4 h-4" /> {t('form.addMember')}
           </button>
         </div>
         {form.coResidents.length === 0 ? (
-          <p className="text-sm text-gray-400">No co-residents added.</p>
+          <p className="text-sm text-gray-400">{t('form.noCoResidents')}</p>
         ) : (
           form.coResidents.map((r, i) => (
             <div key={i} className="p-4 bg-white rounded-xl border border-gray-100 mb-3 space-y-3">
               <div className="flex justify-between items-center gap-2">
-                <span className="text-sm font-medium text-gray-600">Member {i + 1}</span>
+                <span className="text-sm font-medium text-gray-600">{t('form.member', { n: i + 1 })}</span>
                 <button
                   type="button"
                   onClick={() => removeResident(i)}
@@ -485,14 +487,14 @@ function StepOtherMembers({
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Field label="Name *" value={r.name} error={errors[`coResidents.${i}.name`]} onChange={(v) => updateResident(i, 'name', v)} />
-                <Field label="Relation" value={r.relation || ''} onChange={(v) => updateResident(i, 'relation', v)} />
-                <Field label="Age" type="number" min={0} value={String(r.age || '')} onChange={(v) => updateResident(i, 'age', Number(v) || 0)} />
-                <Field label="Occupation" value={r.occupation || ''} onChange={(v) => updateResident(i, 'occupation', v)} />
-                <Field label="Mobile" value={r.mobile || ''} error={errors[`coResidents.${i}.mobile`]} inputMode="numeric" maxLength={10} onChange={(v) => updateResident(i, 'mobile', v.replace(/\D/g, '').slice(0, 10))} />
+                <Field label={t('form.name')} value={r.name} error={errors[`coResidents.${i}.name`]} onChange={(v) => updateResident(i, 'name', v)} />
+                <Field label={t('form.relation')} value={r.relation || ''} onChange={(v) => updateResident(i, 'relation', v)} />
+                <Field label={t('form.age')} type="number" min={0} value={String(r.age || '')} onChange={(v) => updateResident(i, 'age', Number(v) || 0)} />
+                <Field label={t('form.occupation')} value={r.occupation || ''} onChange={(v) => updateResident(i, 'occupation', v)} />
+                <Field label={t('form.mobile').replace(' *', '')} value={r.mobile || ''} error={errors[`coResidents.${i}.mobile`]} inputMode="numeric" maxLength={10} onChange={(v) => updateResident(i, 'mobile', v.replace(/\D/g, '').slice(0, 10))} />
                 <div className="md:col-span-2">
                   <PhotoUpload
-                    label="Photo"
+                    label={t('form.photo')}
                     value={r.photo}
                     onChange={(photo) => updateResident(i, 'photo', photo)}
                   />
@@ -505,19 +507,19 @@ function StepOtherMembers({
       <div className="section-box">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-            <GraduationCap className="w-4 h-4 text-saffron-500" /> Children / Students
+            <GraduationCap className="w-4 h-4 text-saffron-500" /> {t('form.childrenStudents')}
           </h3>
           <button type="button" className="btn-secondary text-sm py-2 min-h-[44px] w-full sm:w-auto" onClick={addChild}>
-            <Plus className="w-4 h-4" /> Add Child
+            <Plus className="w-4 h-4" /> {t('form.addChild')}
           </button>
         </div>
         {form.children.length === 0 ? (
-          <p className="text-sm text-gray-400">No children added.</p>
+          <p className="text-sm text-gray-400">{t('form.noChildren')}</p>
         ) : (
           form.children.map((c, i) => (
             <div key={i} className="p-4 bg-white rounded-xl border border-saffron-100 mb-3 space-y-4">
               <div className="flex justify-between items-center gap-2">
-                <span className="text-sm font-medium text-gray-600">Student {i + 1}</span>
+                <span className="text-sm font-medium text-gray-600">{t('form.student', { n: i + 1 })}</span>
                 <button
                   type="button"
                   onClick={() => removeChild(i)}
@@ -529,19 +531,19 @@ function StepOtherMembers({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <Field label="Name *" value={c.name} error={errors[`children.${i}.name`]} onChange={(v) => updateChild(i, 'name', v)} />
+                <Field label={t('form.name')} value={c.name} error={errors[`children.${i}.name`]} onChange={(v) => updateChild(i, 'name', v)} />
                 <div>
-                  <label className="label">Gender</label>
+                  <label className="label">{t('form.gender')}</label>
                   <select className="input" value={c.gender} onChange={(e) => updateChild(i, 'gender', e.target.value)}>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="Male">{t('gender.Male')}</option>
+                    <option value="Female">{t('gender.Female')}</option>
+                    <option value="Other">{t('gender.Other')}</option>
                   </select>
                 </div>
-                <Field label="Date of Birth" type="date" value={c.dob || ''} onChange={(v) => updateChild(i, 'dob', v)} />
+                <Field label={t('form.dob')} type="date" value={c.dob || ''} onChange={(v) => updateChild(i, 'dob', v)} />
                 <div className="md:col-span-2">
                   <PhotoUpload
-                    label="Photo"
+                    label={t('form.photo')}
                     value={c.photo}
                     onChange={(photo) => updateChild(i, 'photo', photo)}
                   />
@@ -555,13 +557,13 @@ function StepOtherMembers({
                     className="rounded border-gray-300 text-saffron-500"
                   />
                   <label htmlFor={`studying-${i}`} className="text-sm text-gray-700">
-                    Currently going to school / college
+                    {t('form.currentlyStudying')}
                   </label>
                 </div>
               </div>
 
               <div>
-                <label className="label">Education category</label>
+                <label className="label">{t('form.educationCategory')}</label>
                 <div className="flex flex-col xs:flex-row gap-2">
                   {(['School', 'College'] as StudentType[]).map((type) => (
                     <button
@@ -574,14 +576,12 @@ function StepOtherMembers({
                           : 'bg-white text-gray-600 border-gray-200 hover:border-saffron-300'
                       }`}
                     >
-                      {type === 'School' ? 'School' : 'College'}
+                      {type === 'School' ? t('form.school') : t('form.college')}
                     </button>
                   ))}
                 </div>
                 {!c.isStudying && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    School / college details are optional when not currently studying. Name and basic details are still required.
-                  </p>
+                  <p className="text-xs text-gray-500 mt-2">{t('form.notStudyingHint')}</p>
                 )}
               </div>
 
@@ -590,11 +590,11 @@ function StepOtherMembers({
                   label={
                     c.studentType === 'College'
                       ? c.isStudying
-                        ? 'College Name *'
-                        : 'College Name'
+                        ? t('form.collegeNameRequired')
+                        : t('form.collegeName')
                       : c.isStudying
-                        ? 'School Name *'
-                        : 'School Name'
+                        ? t('form.schoolNameRequired')
+                        : t('form.schoolName')
                   }
                   value={c.school.name || ''}
                   error={errors[`children.${i}.school.name`]}
@@ -602,33 +602,33 @@ function StepOtherMembers({
                 />
                 {c.studentType === 'College' ? (
                   <Field
-                    label={c.isStudying ? 'Course / Degree *' : 'Course / Degree'}
+                    label={c.isStudying ? t('form.courseRequired') : t('form.course')}
                     value={c.course || ''}
                     error={errors[`children.${i}.course`]}
-                    placeholder="e.g. B.Com, B.Tech"
+                    placeholder={t('form.coursePlaceholder')}
                     onChange={(v) => updateChild(i, 'course', v)}
                   />
                 ) : (
                   <>
                     <div>
-                      <label className="label">Medium</label>
+                      <label className="label">{t('form.medium')}</label>
                       <select className="input" value={c.school.medium} onChange={(e) => updateChild(i, 'school.medium', e.target.value)}>
-                        <option value="Hindi">Hindi</option>
-                        <option value="English">English</option>
-                        <option value="Gujarati">Gujarati</option>
-                        <option value="Other">Other</option>
+                        <option value="Hindi">{t('medium.Hindi')}</option>
+                        <option value="English">{t('medium.English')}</option>
+                        <option value="Gujarati">{t('medium.Gujarati')}</option>
+                        <option value="Other">{t('medium.Other')}</option>
                       </select>
                     </div>
-                    <Field label="Board" value={c.school.board || ''} onChange={(v) => updateChild(i, 'school.board', v)} />
+                    <Field label={t('form.board')} value={c.school.board || ''} onChange={(v) => updateChild(i, 'school.board', v)} />
                   </>
                 )}
                 <Field
-                  label={c.studentType === 'College' ? 'Year / Semester' : 'Class / Standard'}
+                  label={c.studentType === 'College' ? t('form.yearSemester') : t('form.classStandard')}
                   value={c.currentStd || ''}
                   onChange={(v) => updateChild(i, 'currentStd', v)}
                 />
-                <Field label="Pass Out Year" type="number" min={1950} max={2100} value={String(c.passOutYear || '')} onChange={(v) => updateChild(i, 'passOutYear', Number(v) || 0)} />
-                <Field label="Percentage (%)" type="number" min={0} max={100} value={String(c.percentage ?? '')} error={errors[`children.${i}.percentage`]} onChange={(v) => updateChild(i, 'percentage', v === '' ? 0 : Number(v))} />
+                <Field label={t('form.passOutYear')} type="number" min={1950} max={2100} value={String(c.passOutYear || '')} onChange={(v) => updateChild(i, 'passOutYear', Number(v) || 0)} />
+                <Field label={t('form.percentage')} type="number" min={0} max={100} value={String(c.percentage ?? '')} error={errors[`children.${i}.percentage`]} onChange={(v) => updateChild(i, 'percentage', v === '' ? 0 : Number(v))} />
               </div>
             </div>
           ))
@@ -639,61 +639,90 @@ function StepOtherMembers({
 }
 
 function StepReview({ form }: { form: FamilyFormData }) {
+  const { t } = useLanguage();
+  const maritalLabel = form.headOfFamily.maritalStatus
+    ? t(`maritalStatus.${form.headOfFamily.maritalStatus}`)
+    : t('form.notSpecified');
+
   return (
     <div className="space-y-4 text-sm">
       <ReviewBlock
-        title="Head of Family"
+        title={t('form.reviewHead')}
         photo={form.headOfFamily.photo}
         lines={[
           `${form.headOfFamily.name} — ${form.headOfFamily.mobile}`,
-          `Marital status: ${form.headOfFamily.maritalStatus || 'Not specified'}`,
+          t('form.maritalStatusLabel', { status: maritalLabel }),
         ]}
       />
       <ReviewBlock
-        title="Address"
+        title={t('form.reviewAddress')}
         lines={[
           [form.address.houseNo, form.address.street, form.address.village].filter(Boolean).join(', ') || '—',
           `${form.address.city}, ${form.address.district}, ${form.address.state} — ${form.address.pincode}`,
         ]}
       />
       <ReviewBlock
-        title="Parents & Income"
+        title={t('form.reviewParents')}
         lines={[
-          `Father: ${form.parents.father.name} (${form.parents.father.occupation || 'N/A'})`,
-          `Mother: ${form.parents.mother.name} (${form.parents.mother.occupation || 'N/A'})`,
-          `Total income: INR ${form.totalFamilyIncome}/month`,
+          t('form.fatherLine', {
+            name: form.parents.father.name,
+            occupation: form.parents.father.occupation || t('form.na'),
+          }),
+          t('form.motherLine', {
+            name: form.parents.mother.name,
+            occupation: form.parents.mother.occupation || t('form.na'),
+          }),
+          t('form.totalIncomeLine', { amount: form.totalFamilyIncome }),
         ]}
         photos={[
-          form.parents.father.photo ? { label: 'Father', url: form.parents.father.photo } : null,
-          form.parents.mother.photo ? { label: 'Mother', url: form.parents.mother.photo } : null,
+          form.parents.father.photo ? { label: t('form.father'), url: form.parents.father.photo } : null,
+          form.parents.mother.photo ? { label: t('form.mother'), url: form.parents.mother.photo } : null,
         ].filter(Boolean) as { label: string; url: string }[]}
       />
       {isSpouseSectionVisible(form.headOfFamily.maritalStatus) &&
         (form.spouse.name || form.spouse.mobile || form.spouse.photo) && (
         <ReviewBlock
-          title={form.headOfFamily.maritalStatus === 'Widowed' ? 'Spouse (Deceased)' : 'Spouse'}
+          title={
+            form.headOfFamily.maritalStatus === 'Widowed'
+              ? t('form.reviewSpouseDeceased')
+              : t('form.reviewSpouse')
+          }
           photo={form.spouse.photo}
           lines={[
             form.spouse.name
               ? `${form.spouse.name}${form.spouse.mobile ? ` — ${form.spouse.mobile}` : ''}`
-              : form.spouse.mobile || 'Details provided',
+              : form.spouse.mobile || t('form.detailsProvided'),
           ]}
         />
       )}
       {form.coResidents.length > 0 && (
-        <ReviewBlock title="Co-Residents" lines={form.coResidents.map((r) => `${r.name} (${r.relation || 'N/A'})`)} />
+        <ReviewBlock
+          title={t('form.reviewCoResidents')}
+          lines={form.coResidents.map((r) => `${r.name} (${r.relation || t('form.na')})`)}
+        />
       )}
       {form.children.length > 0 && (
         <ReviewBlock
-          title="Children"
+          title={t('form.reviewChildren')}
           lines={form.children.map((c) => {
             if (!c.isStudying) {
-              return `${c.name} — Not currently studying (${c.studentType})`;
+              return t('form.childNotStudying', {
+                name: c.name,
+                type: c.studentType === 'College' ? t('form.college') : t('form.school'),
+              });
             }
             if (c.studentType === 'College') {
-              return `${c.name} — College: ${c.school.name || 'N/A'}, ${c.course || 'N/A'}`;
+              return t('form.childCollege', {
+                name: c.name,
+                school: c.school.name || t('form.na'),
+                course: c.course || t('form.na'),
+              });
             }
-            return `${c.name} — School: ${c.school.name || 'N/A'}, Class ${c.currentStd || 'N/A'}`;
+            return t('form.childSchool', {
+              name: c.name,
+              school: c.school.name || t('form.na'),
+              std: c.currentStd || t('form.na'),
+            });
           })}
         />
       )}
@@ -764,6 +793,9 @@ function Field({
   max?: number;
   placeholder?: string;
 }) {
+  const { t } = useLanguage();
+  const errorText = error ? translateErrorMessage(error, t) : undefined;
+
   return (
     <div>
       <label className="label">{label}</label>
@@ -779,7 +811,7 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
       />
       {hint && !error && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
-      {error && <p className="text-xs text-red-600 mt-1">{error}</p>}
+      {errorText && <p className="text-xs text-red-600 mt-1">{errorText}</p>}
     </div>
   );
 }
